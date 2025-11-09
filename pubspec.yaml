@@ -21,6 +21,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-assets:  # Lista de recursos (assets) que se incluirán en el bundle
+  assets:  # Lista de recursos (assets) que se incluirán en el bundle
     - assets/posters/
     - assets/gameplays/
