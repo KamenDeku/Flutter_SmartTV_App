@@ -22,5 +22,5 @@ flutter:
   uses-material-design: true
 
 assets:  # Lista de recursos (assets) que se incluirán en el bundle
-    - lib/assets/posters/
-    - lib/assets/gameplays/
+    - assets/posters/
+    - assets/gameplays/
