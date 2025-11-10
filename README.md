@@ -1,16 +1,32 @@
-# flutter_smarttv_app
+# GameStream TV
 
-A new Flutter project.
+GameStream TV is a **Flutter-based TV application** inspired by platforms like **Steam** and **Netflix**, designed to let users **browse, view details, and play video games directly on their TV** using a remote or controller.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## Overview
 
-A few resources to get you started if this is your first Flutter project:
+GameStream TV provides a console-like experience where users can navigate through a curated catalog of games using their remote’s **arrow keys** and **enter button**.  
+Each game includes a **poster, title, and detailed information screen**, and can be launched directly from the interface.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Features
+
+- **TV Remote Navigation:**  
+  Move through the interface using the **arrow keys** and **Enter/Select**.
+  
+- **Categorized Game Library:**  
+  Organized into sections of titles.
+
+- **Dynamic Banner:**  
+  Displays featured content at the top with visual highlights when focused.
+
+- **Game Details Page:**  
+  View a selected game’s info, artwork, and “Play” button.
+
+- **Smooth Focus Transitions:**  
+  Visual feedback (borders and glow effects) show which UI element is currently focused.
+
+---
+
