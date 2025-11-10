@@ -47,9 +47,7 @@ class _DetailScreenState extends State<DetailScreen> {
             // Navegar a GameScreen
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const GameScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const GameScreen()),
             );
           } else {
             // Volver atrás
@@ -102,7 +100,7 @@ class _DetailScreenState extends State<DetailScreen> {
                   ),
                   const SizedBox(height: 20),
                   const Text(
-                    "Descripción breve del juego o anime. Aquí podrías mostrar sinopsis, desarrollador, o año de lanzamiento.",
+                    "Discover a vast, haunted kingdom in Hollow Knight: Silksong!  Explore, fight and survive as you ascend to the peak of a land ruled by  silk and song.",
                     style: TextStyle(fontSize: 20, color: Colors.white70),
                   ),
                   const SizedBox(height: 40),
