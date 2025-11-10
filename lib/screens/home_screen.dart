@@ -33,8 +33,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _focusedSection = 0; // 0 = sidebar, 1 = contenido
-  int _focusedRow = 0;
+  int _focusedSection = 0;
+  int _sidebarFocusedIndex = 0;
+  int _contentFocusedRow = 0;
   int _focusedCol = 0;
   bool _bannerFocused = false;
   final FocusNode _focusNode = FocusNode();
@@ -42,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _focusNode.requestFocus(); // Activa el control del teclado al iniciar
+    _focusNode.requestFocus();
   }
 
   @override
@@ -51,45 +52,60 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  // 🎮 Control de navegación con el teclado del control remoto o D-Pad
   void _handleKeyEvent(RawKeyEvent event) {
     if (event is RawKeyDownEvent) {
       setState(() {
-        if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-          if (_bannerFocused) {
-            // move focus from banner into the first category row
-            _bannerFocused = false;
-            _focusedRow = 0;
-          } else {
-            _focusedRow = (_focusedRow + 1).clamp(0, catalogData.length - 1);
+        if (_focusedSection == 0) {
+          if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            _sidebarFocusedIndex = (_sidebarFocusedIndex + 1) % 5;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+            _sidebarFocusedIndex = (_sidebarFocusedIndex - 1) % 5;
+            if (_sidebarFocusedIndex < 0) _sidebarFocusedIndex = 4;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            _focusedSection = 1;
+          } else if (event.logicalKey == LogicalKeyboardKey.enter ||
+              event.logicalKey == LogicalKeyboardKey.select) {
+            print('Sidebar item $_sidebarFocusedIndex selected');
           }
-        } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-          if (!_bannerFocused && _focusedRow == 0) {
-            // move focus from first row up to the banner
-            _bannerFocused = true;
-          } else {
-            _focusedRow = (_focusedRow - 1).clamp(0, catalogData.length - 1);
-          }
-        } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-          _focusedSection = 1;
-          _focusedCol = (_focusedCol + 1).clamp(
-            0,
-            catalogData.values.elementAt(_focusedRow).length - 1,
-          );
-        } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-          if (_bannerFocused) {
-            // pressing left from the banner moves focus to the sidebar
-            _bannerFocused = false;
-            _focusedSection = 0;
-          } else if (_focusedCol > 0) {
-            _focusedCol--;
-          } else {
-            _focusedSection = 0;
-          }
-        } else if (event.logicalKey == LogicalKeyboardKey.enter ||
-            event.logicalKey == LogicalKeyboardKey.select) {
-          if (_focusedSection == 1) {
-            final item = catalogData.values.elementAt(_focusedRow)[_focusedCol];
+        } else {
+          if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            if (_bannerFocused) {
+              _bannerFocused = false;
+              _contentFocusedRow = 0;
+            } else {
+              _contentFocusedRow = (_contentFocusedRow + 1).clamp(
+                0,
+                catalogData.length - 1,
+              );
+            }
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+            if (!_bannerFocused && _contentFocusedRow == 0) {
+              _bannerFocused = true;
+            } else {
+              _contentFocusedRow = (_contentFocusedRow - 1).clamp(
+                0,
+                catalogData.length - 1,
+              );
+            }
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            _focusedCol = (_focusedCol + 1).clamp(
+              0,
+              catalogData.values.elementAt(_contentFocusedRow).length - 1,
+            );
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            if (_bannerFocused) {
+              _bannerFocused = false;
+              _focusedSection = 0;
+            } else if (_focusedCol > 0) {
+              _focusedCol--;
+            } else {
+              _focusedSection = 0;
+            }
+          } else if (event.logicalKey == LogicalKeyboardKey.enter ||
+              event.logicalKey == LogicalKeyboardKey.select) {
+            final item = catalogData.values.elementAt(
+              _contentFocusedRow,
+            )[_focusedCol];
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => DetailScreen(item: item)),
@@ -111,12 +127,12 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             SideNavBar(
               isFocused: _focusedSection == 0,
-              focusedIndex: _focusedRow,
+              focusedIndex: _sidebarFocusedIndex,
             ),
             Expanded(
               child: _ContentGrid(
                 isFocused: _focusedSection == 1,
-                focusedRow: _focusedRow,
+                focusedRow: _contentFocusedRow,
                 focusedCol: _focusedCol,
                 bannerFocused: _bannerFocused,
               ),
@@ -145,7 +161,6 @@ class _ContentGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final categories = catalogData.keys.toList();
-    // Use a single ListView so the banner scrolls with the categories.
     return ListView.builder(
       itemCount: categories.length + 1, // +1 for the banner
       itemBuilder: (context, index) {
