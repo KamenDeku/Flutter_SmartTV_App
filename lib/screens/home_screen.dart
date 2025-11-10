@@ -36,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _focusedSection = 0; // 0 = sidebar, 1 = contenido
   int _focusedRow = 0;
   int _focusedCol = 0;
+  bool _bannerFocused = false;
   final FocusNode _focusNode = FocusNode();
 
   @override
@@ -55,9 +56,20 @@ class _HomeScreenState extends State<HomeScreen> {
     if (event is RawKeyDownEvent) {
       setState(() {
         if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-          _focusedRow = (_focusedRow + 1).clamp(0, catalogData.length - 1);
+          if (_bannerFocused) {
+            // move focus from banner into the first category row
+            _bannerFocused = false;
+            _focusedRow = 0;
+          } else {
+            _focusedRow = (_focusedRow + 1).clamp(0, catalogData.length - 1);
+          }
         } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-          _focusedRow = (_focusedRow - 1).clamp(0, catalogData.length - 1);
+          if (!_bannerFocused && _focusedRow == 0) {
+            // move focus from first row up to the banner
+            _bannerFocused = true;
+          } else {
+            _focusedRow = (_focusedRow - 1).clamp(0, catalogData.length - 1);
+          }
         } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
           _focusedSection = 1;
           _focusedCol = (_focusedCol + 1).clamp(
@@ -65,7 +77,11 @@ class _HomeScreenState extends State<HomeScreen> {
             catalogData.values.elementAt(_focusedRow).length - 1,
           );
         } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-          if (_focusedCol > 0) {
+          if (_bannerFocused) {
+            // pressing left from the banner moves focus to the sidebar
+            _bannerFocused = false;
+            _focusedSection = 0;
+          } else if (_focusedCol > 0) {
             _focusedCol--;
           } else {
             _focusedSection = 0;
@@ -87,6 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF272936),
       body: RawKeyboardListener(
         focusNode: _focusNode,
         onKey: _handleKeyEvent,
@@ -101,6 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 isFocused: _focusedSection == 1,
                 focusedRow: _focusedRow,
                 focusedCol: _focusedCol,
+                bannerFocused: _bannerFocused,
               ),
             ),
           ],
@@ -115,19 +133,86 @@ class _ContentGrid extends StatelessWidget {
   final bool isFocused;
   final int focusedRow;
   final int focusedCol;
+  final bool bannerFocused;
 
   const _ContentGrid({
     required this.isFocused,
     required this.focusedRow,
     required this.focusedCol,
+    required this.bannerFocused,
   });
 
   @override
   Widget build(BuildContext context) {
     final categories = catalogData.keys.toList();
+    // Use a single ListView so the banner scrolls with the categories.
     return ListView.builder(
-      itemCount: categories.length,
-      itemBuilder: (context, rowIndex) {
+      itemCount: categories.length + 1, // +1 for the banner
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          // Banner as the first scrollable item
+          return Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 40.0,
+              vertical: 20.0,
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final screenHeight = MediaQuery.of(context).size.height;
+                final targetHeight = (isFocused && bannerFocused)
+                    ? screenHeight * 0.5
+                    : 140.0;
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  height: targetHeight,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12.0),
+                    color: Colors.black26,
+                    // Show a green border and glow when the banner is focused
+                    border: (isFocused && bannerFocused)
+                        ? Border.all(color: Colors.green, width: 3)
+                        : null,
+                    boxShadow: (isFocused && bannerFocused)
+                        ? [
+                            BoxShadow(
+                              color: Colors.green.withOpacity(0.6),
+                              blurRadius: 20,
+                              spreadRadius: 4,
+                            ),
+                          ]
+                        : null,
+                    image: DecorationImage(
+                      image: AssetImage(catalogData.values.first[0]['poster']!),
+                      fit: BoxFit.cover,
+                      colorFilter: ColorFilter.mode(
+                        Colors.black45,
+                        BlendMode.darken,
+                      ),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Text(
+                        'Featured',
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          );
+        }
+
+        // Category items (shift index by -1 because 0 is banner)
+        final rowIndex = index - 1;
         final category = categories[rowIndex];
         final items = catalogData[category]!;
         return Padding(
@@ -142,6 +227,7 @@ class _ContentGrid extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -161,9 +247,22 @@ class _ContentGrid extends StatelessWidget {
                       child: FocusableItem(
                         isFocused:
                             isFocused &&
+                            !bannerFocused &&
                             focusedRow == rowIndex &&
                             focusedCol == colIndex,
-                        child: Image.asset(item['poster']!, fit: BoxFit.cover),
+                        child: SizedBox(
+                          width: 160,
+                          height: 240,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Image.asset(
+                              item['poster']!,
+                              fit: BoxFit.cover,
+                              width: 160,
+                              height: 240,
+                            ),
+                          ),
+                        ),
                       ),
                     );
                   },

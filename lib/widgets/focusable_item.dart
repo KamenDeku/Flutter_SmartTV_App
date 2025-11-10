@@ -20,13 +20,13 @@ class FocusableItem extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isFocused ? Colors.red : Colors.transparent,
+          color: isFocused ? Colors.green : Colors.transparent,
           width: 3,
         ),
         boxShadow: isFocused
             ? [
                 BoxShadow(
-                  color: Colors.red.withOpacity(0.6),
+                  color: Colors.green.withOpacity(0.6),
                   blurRadius: 15,
                   spreadRadius: 3,
                 ),
